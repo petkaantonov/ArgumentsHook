@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="argumentshook.js"></script>
+<style type="text/css">
+#log {
+margin: 20px;
+padding: 5px;
+background-color: #eeeeee;
+border: 1px solid #dddddd;
+}
+</style>
+<title>ArgumentsHook testpage</title>
+</head>
+<body>
+<div id="wrapper">
+	<div>
+	<a href="view-source:http://tuohiniemi.fi/~runeli/petka/args/test.html">View source for code</a>
+	</div>
+	<pre id="log">
+	
+	</pre>
+</div>
+<script type="text/javascript">
+
+//Overload example
+
+var addStuffTogether = function(){
+	return null; // Default, this function is called when none of the below signatures match given arguments
+	}.overload({
+	
+		//When strictly called with number as 1st argument and string as 2nd. Repeats the string i number of times
+		"number,string": function( i, str ){
+		var r = "";
+		
+			while( i-- ) {
+			r += str;
+			}
+		return r;
+		},
+	
+		//String as 1st, number as 2nd and 0-unlimited amount of numbers as rest of the arguments. Outputs the string concatenated with
+		//the sum of numbers with " = " inbetween.
+		"string,number,number...": function( msg ){
+		var args = this.arguments, i, l = args.length, c = 0;
+		
+			for( i = 1; i < l; ++i ) {
+			c += args[i];
+			}
+		return msg +" = " +c;		
+		
+		},
+	
+		//At least one string
+		"string,string...": function(){
+		return this.arguments.argumentList.join( " " );
+		},
+
+		//At least one number. Sums all the numbers together.
+		"number,number...": function(){
+		var args = this.arguments, i, l = args.length, c = 0;
+		
+			for( i = 0; i < l; ++i ) {
+			c += args[i];
+			}
+		return c;
+		},
+
+		//At least one array. Concats all arrays together
+		"array,array...": function(){
+		var r = this.arguments.argumentList.shift();
+		return r.concat.apply(r, this.arguments.argumentList );
+		},
+
+		//At least one object. Creates single object from argument objects
+		"object,object...": function(){
+		var r = {}, args = this.arguments, i, l = args.length, obj, key;
+		
+			for( i = 0; i < l; ++i ) {
+			obj = args[i];
+				for( key in obj ) {
+				r[key] = obj[key];
+				}
+			}
+		return r;
+		}
+
+	}
+);
+
+//Arguments Hook example
+
+//Ensure at least string and only strings as further arguments.
+var testEnsure = function testEnsure(){
+this.arguments.ensure( "string,string..." );
+//If we got here, no error was thrown by ensure and it is ensured that all arguments were of type "string"
+return true;
+}.argumentsHook();
+
+//Math.max function that only accepts numbers, so it should never return NaN.
+var mathMax = function mathMax(){
+this.arguments.ensure("number,number...");
+return Math.max.apply( Math, this.arguments.argumentList );
+}.argumentsHook();
+
+
+//Hook a whole class
+
+function Person( name ) {
+this.name = name
+}
+
+Person.prototype = {
+
+	constructor: Person,
+	
+	saySomething: function(){
+	this.arguments.ensure( "string" );
+	return( this.name + " said:\n"+this.arguments[0] );
+	}
+}
+
+//Will hook all methods currently in Person.prototype;
+Person.hookMethods();
+var mike = new Person("mike");
+
+
+//Begin tests
+var tests = [
+	function(){
+	return mike.saySomething();
+	},
+	function(){
+	return mike.saySomething(9);
+	},
+	function(){
+	return mike.saySomething("100");
+	},
+	
+	function(){
+	return addStuffTogether( "hello", "world", "im", "here" );
+	},
+	function(){
+	return addStuffTogether( 1, 2, 3, 4 );
+	},
+	function(){
+	return addStuffTogether( [1,2,3],[1,2,3],[1,2,3],[1,2,3] );
+	},
+	
+	function(){
+	return addStuffTogether({"mouse": "Squeek"},{"cow": "moo"},{"cat": "meaow"},{"bear": "grrawwl"});
+	},
+	
+	function(){
+	return addStuffTogether( "3 + 5 + 4 + 5", 3, 5, 4 ,5 );	
+	},
+	
+	function(){
+	return addStuffTogether( 10, "pokemon" );
+	},
+	
+	function(){
+	return addStuffTogether( [], {}, 9 );
+	},
+	
+	function(){
+	return mathMax( 1,2,3 );
+	},
+	
+	function(){
+	return mathMax( 1,[],2,3,4);
+	},
+	
+	function(){
+	return mathMax( 1,2,3,4,5,6,7,"eight");
+	}
+	
+], l = tests.length;
+
+function prelog(val){
+document.getElementById("log").appendChild( document.createTextNode( val +"\n\n" ) );
+}
+
+	while( l-- ) {
+	
+		try{
+		prelog(tests[l]());
+		}
+		catch(e){
+		prelog(e.message);
+		}
+
+	}
+
+
+</script>
+</body>
+</html>
