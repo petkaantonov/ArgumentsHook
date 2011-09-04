@@ -104,6 +104,18 @@ this.arguments.ensure("number,number...");
 return Math.max.apply( Math, this.arguments.argumentList );
 }.argumentsHook();
 
+//Ensure example
+
+var sumit = function sumit(){
+var c = 0, args = this.arguments, i, l = args.length;
+	
+	for( i = 0; i < l; ++i ) {
+	c += args[i];
+	}
+	
+return c;
+}.ensure( "number, number... -> number" );
+
 
 //Hook a whole class
 
@@ -135,7 +147,7 @@ var tests = [
 	return mike.saySomething(9);
 	},
 	function(){
-	return mike.saySomething("100");
+	return mike.saySomething("100", "100");
 	},
 	
 	function(){
