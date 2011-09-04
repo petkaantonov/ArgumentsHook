@@ -17,7 +17,8 @@ var legitToString = /^\[object\s[a-zA-Z\$_-][a-zA-Z0-9\$_-]*?\]$/,
 	prMethod;
 	
 	
-	//Automatically ensure a function is called with certain argument signature and returns 
+	//Automatically ensure a function is called with certain argument signature and returns
+	//a value of predetermined type.
 	function ensure( signature ) {
 		if( this.isHooked ) {
 		return this;
@@ -35,12 +36,11 @@ var legitToString = /^\[object\s[a-zA-Z\$_-][a-zA-Z0-9\$_-]*?\]$/,
 		this.arguments = args;
 		r = self.apply( this, args.argumentList );
 		rType = typeOf( r );
-			if( rType != "any" && rType != returnType ) {
-			throw new TypeError(  "Expected <"+returnType+">, got "+r+"<"+rType+"> instead.\n" );
+		
+			if( returnType != "any" && rType != returnType ) {
+			throw new TypeError(  "Expected return type of <"+returnType+">, got "+r+"<"+rType+"> instead.\n" );
 			}
-			else {
-			return r;
-			}
+		return r;
 		}
 	ensured.isHooked = true;
 	return ensured;
